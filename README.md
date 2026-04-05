@@ -73,6 +73,28 @@ The root build compiles both:
 - the Jellytube server
 - the Jellytube Jellyfin bridge plugin
 
+## Docker Image
+
+GitHub Actions publishes the server image to GHCR on pushes to `main`.
+
+```text
+ghcr.io/itz4blitz/jellytube:latest
+```
+
+Useful tags:
+
+- `latest`: current `main`
+- `main`: latest branch build for `main`
+- `sha-<commit>`: exact immutable build for a specific commit
+
+Example:
+
+```bash
+docker pull ghcr.io/itz4blitz/jellytube:latest
+```
+
+The container serves the Jellytube web UI and API. The Jellyfin bridge plugin is still a separate build artifact from `plugins/Jellytube.JellyfinBridge`.
+
 ## Chrome Extension
 
 The extension is intentionally small.

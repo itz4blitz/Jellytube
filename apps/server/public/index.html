@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jellytube</title>
+    <link rel="stylesheet" href="/app.css">
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero card">
+        <div class="hero-main">
+          <p class="eyebrow">Jellyfin Requests</p>
+          <h1 id="appName">Jellytube</h1>
+          <p id="heroLede" class="lede">Add web videos to your library.</p>
+          <div id="heroStats" class="hero-stats"></div>
+        </div>
+        <div class="hero-side">
+          <div class="hero-panel">
+            <p class="eyebrow eyebrow-muted">Control Plane</p>
+            <h2 id="heroSummaryTitle">Request once. Review once. Download privately.</h2>
+            <p id="heroSummaryBody" class="subtle">Jellytube gives your Jellyfin users a clean request workflow for web video without exposing MeTube.</p>
+          </div>
+          <button id="logoutButton" class="ghost" hidden>Log out</button>
+        </div>
+      </section>
+
+      <section id="statusCard" class="card muted-card" hidden>
+        <p id="statusMessage">Loading...</p>
+      </section>
+
+      <section id="loginCard" class="card split-card" hidden>
+        <div class="stack">
+          <div>
+            <h2>Sign in with Jellyfin</h2>
+            <p class="subtle">Use your existing Jellyfin account so every request stays attributable to the right person.</p>
+          </div>
+          <form id="loginForm" class="stack">
+            <label>
+              <span>Username</span>
+              <input id="username" name="username" autocomplete="username" required>
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button type="submit">Sign in</button>
+          </form>
+        </div>
+        <aside class="glass-panel stack">
+          <div>
+            <p class="eyebrow eyebrow-muted">Why Jellytube</p>
+            <h3>Jellyseerr-style intake for web video.</h3>
+          </div>
+          <div class="pill-row">
+            <span class="badge">Jellyfin identity</span>
+            <span class="badge">Admin review</span>
+            <span class="badge">MeTube queue</span>
+          </div>
+          <div class="feature-list">
+            <div class="feature-item">
+              <strong>Track who asked</strong>
+              <p class="subtle">Every request is pinned to the Jellyfin user who submitted it.</p>
+            </div>
+            <div class="feature-item">
+              <strong>Review before download</strong>
+              <p class="subtle">Admins can approve playlists, channels, and backfills instead of exposing the worker.</p>
+            </div>
+            <div class="feature-item">
+              <strong>Keep the worker private</strong>
+              <p class="subtle">Approved jobs get pushed into MeTube without making it your public UI.</p>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="dashboard" class="dashboard" hidden>
+        <section id="requestCard" class="card request-composer" hidden>
+          <div class="section-header">
+            <div>
+              <h2>Add Request</h2>
+              <p id="welcomeLine" class="subtle"></p>
+            </div>
+          </div>
+          <div class="composer-grid">
+            <form id="requestForm" class="stack">
+              <label>
+                <span>Video, playlist, or channel URL</span>
+                <input id="requestUrl" name="url" type="url" placeholder="https://www.youtube.com/watch?v=..." required>
+              </label>
+              <label>
+                <span>Title hint</span>
+                <input id="titleHint" name="titleHint" placeholder="Optional human-friendly title">
+              </label>
+              <label>
+                <span>Note for admins</span>
+                <textarea id="requestNote" name="note" rows="4" placeholder="Why you want this, backfill limit, playlist context, etc."></textarea>
+              </label>
+              <button type="submit">Submit request</button>
+            </form>
+
+            <aside class="preview-panel stack">
+              <div>
+                <p class="eyebrow eyebrow-muted">Request Preview</p>
+                <h3 id="requestPreviewTitle">Paste a supported link to get started.</h3>
+              </div>
+              <p id="requestPreviewSummary" class="subtle">Jellytube will classify the link, tie it to your Jellyfin identity, and route it through review if needed.</p>
+              <div id="requestPreviewBadges" class="pill-row"></div>
+              <p id="requestPreviewNote" class="subtle" hidden></p>
+              <div class="preview-checklist">
+                <div class="preview-point">
+                  <strong>1</strong>
+                  <span>Use a direct video, playlist, or creator URL instead of a generic homepage.</span>
+                </div>
+                <div class="preview-point">
+                  <strong>2</strong>
+                  <span>Add a title or note when the URL needs context, especially for playlists and backfills.</span>
+                </div>
+                <div class="preview-point">
+                  <strong>3</strong>
+                  <span>Admins can approve, reject, and audit everything from the queue below.</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <div class="dashboard-grid">
+          <section id="accountCard" class="card" hidden>
+            <div class="section-header">
+              <div>
+                <h2>Your Account</h2>
+                <p class="subtle">Signed in with Jellyfin.</p>
+              </div>
+            </div>
+            <div class="account-grid">
+              <div class="account-row">
+                <span class="account-label">Username</span>
+                <strong id="accountUsername">-</strong>
+              </div>
+              <div class="account-row">
+                <span class="account-label">Role</span>
+                <strong id="accountRole">-</strong>
+              </div>
+              <div class="account-row">
+                <span class="account-label">User ID</span>
+                <code id="accountUserId">-</code>
+              </div>
+            </div>
+            <div id="myStatsLine" class="pill-row account-pills"></div>
+          </section>
+
+          <section id="adminCard" class="card" hidden>
+            <div class="section-header">
+              <div>
+                <h2>Admin Queue</h2>
+                <p class="subtle">Visible because this Jellyfin account is an admin.</p>
+              </div>
+              <div id="statsLine" class="pill-row"></div>
+            </div>
+            <div id="pendingRequests" class="stack list"></div>
+          </section>
+        </div>
+
+        <section id="requestsCard" class="card" hidden>
+          <div class="section-header">
+            <div>
+              <h2>Your Requests</h2>
+              <p class="subtle">Saved under this Jellyfin account and kept visible for review history.</p>
+            </div>
+          </div>
+          <div id="myRequests" class="stack list"></div>
+        </section>
+      </section>
+    </main>
+
+    <template id="requestTemplate">
+      <article class="request-item">
+        <div class="request-head">
+          <div class="request-meta">
+            <span class="badge badge-source"></span>
+            <span class="badge badge-kind"></span>
+            <span class="badge badge-status"></span>
+          </div>
+          <p class="request-created"></p>
+        </div>
+        <h3 class="request-title"></h3>
+        <p class="request-url"></p>
+        <p class="request-note"></p>
+        <div class="request-extra"></div>
+        <div class="actions"></div>
+      </article>
+    </template>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

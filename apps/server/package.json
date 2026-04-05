@@ -1,0 +1,24 @@
+{
+  "name": "@jellytube/server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --out-dir dist",
+    "dev": "tsx watch src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cookie": "11.0.2",
+    "@fastify/static": "9.0.0",
+    "fastify": "5.8.4",
+    "zod": "4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "25.5.2",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "6.0.2",
+    "vitest": "4.1.2"
+  }
+}

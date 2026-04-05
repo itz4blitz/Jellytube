@@ -1,0 +1,9 @@
+node_modules/
+dist/
+bin/
+obj/
+.DS_Store
+.env
+apps/server/data/
+apps/server/.tmp/
+coverage/

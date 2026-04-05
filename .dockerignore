@@ -1,0 +1,11 @@
+.git
+.DS_Store
+node_modules
+apps/server/node_modules
+apps/server/dist
+apps/server/data
+apps/server/.tmp
+plugins/**/bin
+plugins/**/obj
+coverage
+.env

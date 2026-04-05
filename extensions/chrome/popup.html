@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Jellytube Sender</title>
+    <style>
+      body {
+        margin: 0;
+        min-width: 320px;
+        font-family: Inter, system-ui, sans-serif;
+        background: #07111f;
+        color: #e5eefb;
+      }
+
+      main {
+        display: grid;
+        gap: 0.8rem;
+        padding: 1rem;
+      }
+
+      label {
+        display: grid;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        color: #9db0cb;
+      }
+
+      input,
+      button {
+        font: inherit;
+      }
+
+      input {
+        border-radius: 0.75rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        background: #0d1727;
+        color: #e5eefb;
+        padding: 0.75rem 0.85rem;
+      }
+
+      button {
+        border: 0;
+        border-radius: 0.75rem;
+        padding: 0.8rem 0.9rem;
+        cursor: pointer;
+        font-weight: 700;
+        background: linear-gradient(135deg, #79b8ff, #a78bfa);
+        color: #07111f;
+      }
+
+      #status {
+        color: #9db0cb;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <label>
+        <span>Launch URL</span>
+        <input id="launchUrl" placeholder="https://jellyfin.example.com/JellytubeBridge/start">
+      </label>
+      <label>
+        <span>Site Name</span>
+        <input id="siteName" placeholder="AtomicStudio">
+      </label>
+      <button id="saveButton" type="button">Save settings</button>
+      <button id="addButton" type="button">Add current page</button>
+      <p id="status">Use either the Jellytube root URL or the Jellyfin bridge start URL.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

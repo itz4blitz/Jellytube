@@ -1,0 +1,18 @@
+{
+  "name": "jellytube",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.32.1"
+  },
+  "scripts": {
+    "build": "pnpm build:server && pnpm build:plugin",
+    "build:server": "pnpm --filter @jellytube/server build",
+    "build:plugin": "dotnet build ./plugins/Jellytube.JellyfinBridge/Jellytube.JellyfinBridge.csproj",
+    "dev:server": "pnpm --filter @jellytube/server dev",
+    "package:plugin": "dotnet publish ./plugins/Jellytube.JellyfinBridge/Jellytube.JellyfinBridge.csproj -c Release",
+    "test": "pnpm --filter @jellytube/server test",
+    "typecheck": "pnpm --filter @jellytube/server typecheck"
+  }
+}

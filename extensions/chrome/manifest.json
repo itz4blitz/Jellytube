@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Jellytube Sender",
+  "version": "0.1.0",
+  "description": "Send the current streaming page into a Jellytube request flow.",
+  "permissions": ["storage", "tabs", "contextMenus"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Add to Jellytube"
+  }
+}

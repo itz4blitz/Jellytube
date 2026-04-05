@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Jellytube Bridge</title>
+</head>
+<body>
+    <div id="JellytubeBridgeConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="JellytubeBridgeConfigForm">
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <h2 class="sectionTitle">Jellytube Bridge</h2>
+                        <div class="fieldDescription">
+                            Configure the public Jellytube endpoint that Jellyfin should hand authenticated users off to for web video requests.
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ServiceBaseUrl">Service Base URL</label>
+                        <input id="ServiceBaseUrl" name="ServiceBaseUrl" type="url" is="emby-input" placeholder="https://requests.example.com" />
+                        <div class="fieldDescription">The public Jellytube origin users should land on after the Jellyfin handoff.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="ServiceHandoffPath">Service Handoff Path</label>
+                        <input id="ServiceHandoffPath" name="ServiceHandoffPath" type="text" is="emby-input" placeholder="/auth/handoff" />
+                        <div class="fieldDescription">The Jellytube route that receives signed handoff tokens.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="SharedSecret">Shared Secret</label>
+                        <input id="SharedSecret" name="SharedSecret" type="password" is="emby-input" />
+                        <div class="fieldDescription">Must match the Jellytube service's HANDOFF_SECRET value.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="TokenLifetimeSeconds">Token Lifetime (seconds)</label>
+                        <input id="TokenLifetimeSeconds" name="TokenLifetimeSeconds" type="number" min="15" is="emby-input" />
+                        <div class="fieldDescription">Short-lived token expiry used for the handoff redirect.</div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <label class="inputLabel inputLabelUnfocused" for="DefaultReturnPath">Default Return Path</label>
+                        <input id="DefaultReturnPath" name="DefaultReturnPath" type="text" is="emby-input" placeholder="/" />
+                        <div class="fieldDescription">Fallback path inside Jellytube when no explicit target is supplied.</div>
+                    </div>
+
+                    <div class="verticalSection verticalSection-extrabottompadding">
+                        <div class="fieldDescription">
+                            Recommended user launch URL inside Jellyfin Web:
+                            <code>/JellytubeBridge/start</code>
+                        </div>
+                        <div class="fieldDescription">
+                            Browser extension launch URL example:
+                            <code>https://your-jellyfin.example.com/JellytubeBridge/start</code>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var JellytubeBridgeConfig = {
+                pluginUniqueId: 'db536020-c5cf-47a8-9d56-b424c352b0aa'
+            };
+
+            document.querySelector('#JellytubeBridgeConfigPage').addEventListener('pageshow', function () {
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(JellytubeBridgeConfig.pluginUniqueId).then(function (config) {
+                    document.querySelector('#ServiceBaseUrl').value = config.ServiceBaseUrl || '';
+                    document.querySelector('#ServiceHandoffPath').value = config.ServiceHandoffPath || '/auth/handoff';
+                    document.querySelector('#SharedSecret').value = config.SharedSecret || '';
+                    document.querySelector('#TokenLifetimeSeconds').value = config.TokenLifetimeSeconds || 60;
+                    document.querySelector('#DefaultReturnPath').value = config.DefaultReturnPath || '/';
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            document.querySelector('#JellytubeBridgeConfigForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(JellytubeBridgeConfig.pluginUniqueId).then(function (config) {
+                    config.ServiceBaseUrl = document.querySelector('#ServiceBaseUrl').value.trim();
+                    config.ServiceHandoffPath = document.querySelector('#ServiceHandoffPath').value.trim() || '/auth/handoff';
+                    config.SharedSecret = document.querySelector('#SharedSecret').value;
+                    config.TokenLifetimeSeconds = Number(document.querySelector('#TokenLifetimeSeconds').value || '60');
+                    config.DefaultReturnPath = document.querySelector('#DefaultReturnPath').value.trim() || '/';
+
+                    ApiClient.updatePluginConfiguration(JellytubeBridgeConfig.pluginUniqueId, config).then(function (result) {
+                        Dashboard.processPluginConfigurationUpdateResult(result);
+                    });
+                });
+
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>

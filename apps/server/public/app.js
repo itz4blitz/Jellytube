@@ -234,28 +234,50 @@ function renderRequestCollection(container, requests, emptyMessage, isAdminQueue
 }
 
 function renderRequest(request, isAdminQueue) {
-  const fragment = elements.requestTemplate.content.cloneNode(true);
-  const root = fragment.querySelector('.request-item');
-  const sourceBadge = fragment.querySelector('.badge-source');
-  const kindBadge = fragment.querySelector('.badge-kind');
-  const statusBadge = fragment.querySelector('.badge-status');
-  const created = fragment.querySelector('.request-created');
-  const title = fragment.querySelector('.request-title');
-  const url = fragment.querySelector('.request-url');
-  const note = fragment.querySelector('.request-note');
-  const extra = fragment.querySelector('.request-extra');
-  const actions = fragment.querySelector('.actions');
-
+  const root = document.createElement('article');
+  root.className = 'request-item';
   root.dataset.status = request.status;
+
+  const head = document.createElement('div');
+  head.className = 'request-head';
+
+  const meta = document.createElement('div');
+  meta.className = 'request-meta';
+
+  const sourceBadge = buildBadge(humanizeSource(request.source), 'badge-source');
+  const kindBadge = buildBadge(humanizeKind(request.kind), 'badge-kind');
+  const statusBadge = buildBadge(humanizeStatus(request.status), 'badge-status');
   sourceBadge.textContent = humanizeSource(request.source);
   kindBadge.textContent = humanizeKind(request.kind);
   statusBadge.textContent = humanizeStatus(request.status);
   statusBadge.dataset.status = request.status;
+
+  meta.append(sourceBadge, kindBadge, statusBadge);
+
+  const created = document.createElement('p');
+  created.className = 'request-created';
   created.textContent = formatDate(request.createdAt);
+
+  head.append(meta, created);
+
+  const title = document.createElement('h3');
+  title.className = 'request-title';
   title.textContent = request.titleHint || fallbackRequestTitle(request);
+
+  const url = document.createElement('p');
+  url.className = 'request-url';
   url.textContent = request.url;
+
+  const note = document.createElement('p');
+  note.className = 'request-note';
   note.textContent = request.note || '';
   note.hidden = !request.note;
+
+  const extra = document.createElement('div');
+  extra.className = 'request-extra';
+
+  const actions = document.createElement('div');
+  actions.className = 'actions';
 
   const actor = state.session && request.requestedBy.userId === state.session.userId
     ? 'You'
@@ -290,7 +312,8 @@ function renderRequest(request, isAdminQueue) {
     }, 'danger'));
   }
 
-  return fragment;
+  root.append(head, title, url, note, extra, actions);
+  return root;
 }
 
 function appendDetail(container, text, tone) {
@@ -356,9 +379,9 @@ function buildStatBadges(counts) {
   return Object.entries(counts).map(([label, value]) => buildBadge(`${humanizeLabel(label)}: ${value}`));
 }
 
-function buildBadge(text) {
+function buildBadge(text, className = '') {
   const badge = document.createElement('span');
-  badge.className = 'badge';
+  badge.className = `badge ${className}`.trim();
   badge.textContent = text;
   return badge;
 }

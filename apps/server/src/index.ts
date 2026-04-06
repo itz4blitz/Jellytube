@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 
 import Fastify, { type FastifyReply, type FastifyRequest } from 'fastify';
 import cookie from '@fastify/cookie';
@@ -42,7 +42,18 @@ await store.init();
 
 await server.register(cookie);
 await server.register(staticPlugin, {
-  root: join(dirname(fileURLToPath(import.meta.url)), '..', 'public')
+  root: join(dirname(fileURLToPath(import.meta.url)), '..', 'public'),
+  setHeaders(response, filePath) {
+    if (filePath.endsWith('index.html')) {
+      response.setHeader('Cache-Control', 'no-store');
+      return;
+    }
+
+    const extension = extname(filePath);
+    if (extension === '.js' || extension === '.css') {
+      response.setHeader('Cache-Control', 'no-cache');
+    }
+  }
 });
 
 server.get('/health', async () => ({ ok: true }));
@@ -331,6 +342,7 @@ server.get('/', async (request, reply) => {
     return reply.redirect(next.toString());
   }
 
+  reply.header('Cache-Control', 'no-store');
   return reply.sendFile('index.html');
 });
 

@@ -16,9 +16,6 @@ const elements = {
   requestsCard: document.getElementById('requestsCard'),
   adminCard: document.getElementById('adminCard'),
   appName: document.getElementById('appName'),
-  heroLede: document.getElementById('heroLede'),
-  heroSummaryTitle: document.getElementById('heroSummaryTitle'),
-  heroSummaryBody: document.getElementById('heroSummaryBody'),
   heroStats: document.getElementById('heroStats'),
   welcomeLine: document.getElementById('welcomeLine'),
   accountUsername: document.getElementById('accountUsername'),
@@ -41,74 +38,78 @@ const elements = {
   requestTemplate: document.getElementById('requestTemplate')
 };
 
-bootstrap().catch((error) => {
-  console.error(error);
-  setStatus(error.message || 'Failed to load Jellytube', 'danger');
-});
-
-elements.logoutButton.addEventListener('click', async () => {
-  await fetch('/auth/logout', { method: 'POST' });
-  window.location.reload();
-});
-
-elements.loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-
-  setStatus('Signing in with Jellyfin...', 'info');
-
-  const form = new FormData(elements.loginForm);
-  const response = await fetch('/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      username: form.get('username'),
-      password: form.get('password')
-    })
+if (hasDomMismatch()) {
+  recoverFromDomMismatch();
+} else {
+  bootstrap().catch((error) => {
+    console.error(error);
+    setStatus(error.message || 'Failed to load Jellytube', 'danger');
   });
 
-  if (!response.ok) {
-    const json = await response.json().catch(() => ({ error: 'Login failed' }));
-    setStatus(json.error || 'Login failed', 'danger');
-    return;
-  }
-
-  await refresh();
-  clearStatus();
-});
-
-elements.requestForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-
-  const form = new FormData(elements.requestForm);
-  const payload = {
-    url: String(form.get('url') || '').trim(),
-    titleHint: String(form.get('titleHint') || '').trim() || undefined,
-    note: String(form.get('note') || '').trim() || undefined
-  };
-
-  setStatus('Submitting request...', 'info');
-
-  const response = await fetch('/api/requests', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
+  elements.logoutButton.addEventListener('click', async () => {
+    await fetch('/auth/logout', { method: 'POST' });
+    window.location.reload();
   });
 
-  const json = await response.json().catch(() => ({}));
+  elements.loginForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-  if (!response.ok) {
-    setStatus(json.error || 'Request submission failed', 'danger');
-    return;
+    setStatus('Signing in with Jellyfin...', 'info');
+
+    const form = new FormData(elements.loginForm);
+    const response = await fetch('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: form.get('username'),
+        password: form.get('password')
+      })
+    });
+
+    if (!response.ok) {
+      const json = await response.json().catch(() => ({ error: 'Login failed' }));
+      setStatus(json.error || 'Login failed', 'danger');
+      return;
+    }
+
+    await refresh();
+    clearStatus();
+  });
+
+  elements.requestForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const form = new FormData(elements.requestForm);
+    const payload = {
+      url: String(form.get('url') || '').trim(),
+      titleHint: String(form.get('titleHint') || '').trim() || undefined,
+      note: String(form.get('note') || '').trim() || undefined
+    };
+
+    setStatus('Submitting request...', 'info');
+
+    const response = await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const json = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setStatus(json.error || 'Request submission failed', 'danger');
+      return;
+    }
+
+    elements.requestForm.reset();
+    applyPrefill();
+    await refresh();
+    setStatus(json.request?.status === 'queued' ? 'Request queued.' : 'Request submitted.', 'success');
+  });
+
+  for (const input of [elements.requestUrlInput, elements.titleHintInput, elements.requestNoteInput]) {
+    input.addEventListener('input', renderComposerPreview);
   }
-
-  elements.requestForm.reset();
-  applyPrefill();
-  await refresh();
-  setStatus(json.request?.status === 'queued' ? 'Request queued.' : 'Request submitted.', 'success');
-});
-
-for (const input of [elements.requestUrlInput, elements.titleHintInput, elements.requestNoteInput]) {
-  input.addEventListener('input', renderComposerPreview);
 }
 
 async function bootstrap() {
@@ -163,14 +164,7 @@ function render() {
     elements.accountCard.hidden = true;
     elements.requestsCard.hidden = true;
     elements.adminCard.hidden = true;
-    elements.heroLede.textContent = 'Turn videos, playlists, and creator feeds into trackable Jellyfin requests.';
-    elements.heroSummaryTitle.textContent = 'Request once. Review once. Download privately.';
-    elements.heroSummaryBody.textContent = 'Jellytube gives your Jellyfin users a proper intake flow for web video without turning MeTube into the user-facing app.';
-    renderMetricRow(elements.heroStats, [
-      { label: 'Identity', value: 'Jellyfin' },
-      { label: 'Requests', value: 'Tracked' },
-      { label: 'Review', value: 'Admin queue' }
-    ]);
+    elements.heroStats.replaceChildren();
     renderComposerPreview();
     setStatus(state.config.allowPasswordLogin ? 'Sign in with your Jellyfin account to submit requests.' : 'Password login is disabled.', 'info');
     return;
@@ -185,21 +179,10 @@ function render() {
   elements.requestCard.hidden = false;
   elements.accountCard.hidden = false;
   elements.requestsCard.hidden = false;
-
-  elements.heroLede.textContent = isAdmin
-    ? 'Run the web-video request desk from one place and keep approvals tied to Jellyfin identities.'
-    : 'Request web videos without exposing the downloader and keep the whole trail tied to your Jellyfin account.';
-  elements.heroSummaryTitle.textContent = isAdmin
-    ? 'Moderate intake before it reaches MeTube.'
-    : 'Your request history stays visible after submission.';
-  elements.heroSummaryBody.textContent = isAdmin
-    ? `${state.pendingRequests.length} ${pluralize('request', state.pendingRequests.length)} currently waiting for review.`
-    : `${counts.queued} ${pluralize('request', counts.queued)} already queued for MeTube.`;
   renderMetricRow(elements.heroStats, buildHeroMetrics(counts, isAdmin));
 
-  elements.welcomeLine.textContent = isAdmin
-    ? 'Paste a supported link, add any context, and review the queue below like a proper intake board.'
-    : `${state.session.username}, paste a video, playlist, or channel URL and add any context your admin needs.`;
+  elements.welcomeLine.textContent = '';
+  elements.welcomeLine.hidden = true;
   elements.accountUsername.textContent = state.session.username;
   elements.accountRole.textContent = isAdmin ? 'Admin' : 'User';
   elements.accountUserId.textContent = state.session.userId;
@@ -389,6 +372,7 @@ function renderComposerPreview() {
 
   elements.requestPreviewTitle.textContent = preview.title;
   elements.requestPreviewSummary.textContent = preview.summary;
+  elements.requestPreviewSummary.hidden = !preview.summary;
   elements.requestPreviewBadges.replaceChildren(...preview.badges.map((badge) => buildBadge(badge)));
   elements.requestPreviewNote.textContent = preview.note;
   elements.requestPreviewNote.hidden = !preview.note;
@@ -401,9 +385,9 @@ function describeRequestInput(rawUrl, rawTitleHint, rawNote) {
 
   if (!url) {
     return {
-      title: 'Paste a supported link to get started.',
-      summary: 'Jellytube will classify the link, attach it to your Jellyfin identity, and route it through review if needed.',
-      badges: ['Jellyfin identity', 'Admin review', 'MeTube queue'],
+      title: 'Paste a link.',
+      summary: '',
+      badges: [],
       note: titleHint ? `Title hint ready: ${titleHint}` : ''
     };
   }
@@ -411,8 +395,8 @@ function describeRequestInput(rawUrl, rawTitleHint, rawNote) {
   const inspection = inspectUrl(url);
   if (!inspection.valid) {
     return {
-      title: 'This does not look like a full URL yet.',
-      summary: 'Paste the complete https:// link for a video, playlist, or creator page.',
+      title: 'Needs a full URL.',
+      summary: '',
       badges: ['Needs full URL'],
       note: titleHint ? `Title hint ready: ${titleHint}` : ''
     };
@@ -421,24 +405,18 @@ function describeRequestInput(rawUrl, rawTitleHint, rawNote) {
   const source = humanizeSource(inspection.source);
   const kind = humanizeKind(inspection.kind);
   const title = titleHint || `${kind} request from ${inspection.host}`;
-  const badges = [source, kind, note ? 'Note included' : 'Add request context'];
-  const summaryParts = [`Detected a ${source} ${kind.toLowerCase()} request.`];
+  const badges = [source, kind, note ? 'Note included' : 'No note'];
 
   if (inspection.hasPlaylistContext) {
     badges[2] = 'Playlist context';
-    summaryParts.push('Playlist context is present in the link, so backfill or queue notes may help.');
-  }
-
-  if (inspection.source === 'generic') {
-    summaryParts.push('Non-admin users may still be limited by the allowed host list.');
   }
 
   return {
     title,
-    summary: summaryParts.join(' '),
+    summary: '',
     badges,
     note: note
-      ? 'Your admin note will be attached to the request.'
+      ? 'Note attached.'
       : titleHint
         ? `Users will see the title hint "${titleHint}".`
         : ''
@@ -611,4 +589,27 @@ function clearStatus() {
   elements.statusMessage.textContent = '';
   elements.statusCard.hidden = true;
   delete elements.statusCard.dataset.tone;
+}
+
+function hasDomMismatch() {
+  return Object.values(elements).some((element) => element === null);
+}
+
+function recoverFromDomMismatch() {
+  const url = new URL(window.location.href);
+
+  if (!url.searchParams.has('_jt_refresh')) {
+    url.searchParams.set('_jt_refresh', Date.now().toString());
+    window.location.replace(url.toString());
+    return;
+  }
+
+  document.body.innerHTML = `
+    <main style="font-family: Inter, system-ui, sans-serif; max-width: 720px; margin: 3rem auto; padding: 0 1rem; color: #e5eefb;">
+      <section style="background: #0b1726; border: 1px solid rgba(148, 163, 184, 0.18); border-radius: 16px; padding: 1rem 1.2rem;">
+        <h1 style="margin: 0 0 0.6rem; font-size: 1.35rem;">Jellytube updated</h1>
+        <p style="margin: 0; color: #9db0cb;">This browser loaded mismatched cached assets. Refresh the page once more or reopen Jellytube in a new tab.</p>
+      </section>
+    </main>
+  `;
 }
